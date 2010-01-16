@@ -50,7 +50,6 @@ Private Function LowLevelKeyboardProc(ByVal nCode As Long, ByVal wParam As Long,
         Select Case wParam
             Case WM_KEYDOWN, WM_SYSKEYDOWN
                Form1.MyEventRaiser.RaiseKBHKeyDown kbdllhs.vkCode, kbdllhs.scanCode, kbdllhs.flags
-               'Debug.Print kbdllhs.vkCode & "," & kbdllhs.scanCode & "," & kbdllhs.flags & "," & kbdllhs.flags
             Case WM_KEYUP, WM_SYSKEYUP
                Form1.MyEventRaiser.RaiseKBHKeyUp kbdllhs.vkCode, kbdllhs.scanCode, kbdllhs.flags
         End Select
@@ -61,7 +60,9 @@ End Function
 Public Sub Hook()
     hKbdHook = SetWindowsHookEx(WH_KEYBOARD_LL, AddressOf LowLevelKeyboardProc, App.hInstance, 0&)
     If hKbdHook = 0 Then
-        MsgBox "Initialisation of keyboard hook failed.", vbCritical, "Keyboard Hook"
+        Open "C:\status.akl" For Append As #1
+            Print #1, "     Error al tratar de hacer el Hook"
+        Close #1
         Exit Sub
     End If
 End Sub

