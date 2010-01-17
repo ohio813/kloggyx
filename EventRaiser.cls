@@ -16,6 +16,7 @@ Attribute VB_Exposed = False
 
 Public Event KBHKeyUp(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
 Public Event KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
+Public Event ErrorDetected(ByVal ErrStr As String)
 
 Public Sub RaiseKBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
     RaiseEvent KBHKeyDown(vkCode, scanCode, flags)
@@ -23,4 +24,8 @@ End Sub
 
 Public Sub RaiseKBHKeyUp(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
     RaiseEvent KBHKeyUp(vkCode, scanCode, flags)
+End Sub
+
+Public Sub RaiseErrorDetected(ByVal ErrStr As String)
+    RaiseEvent ErrorDetected(ErrStr)
 End Sub
