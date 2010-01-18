@@ -43,6 +43,7 @@ Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination
 
 Private Function LowLevelKeyboardProc(ByVal nCode As Long, ByVal wParam As Long, ByVal lParam As Long) As Integer
     Dim kbdllhs As KBDLLHOOKSTRUCT
+    On Error GoTo ErrHandler
     CopyMemory kbdllhs, ByVal lParam, Len(kbdllhs)
     If nCode = HC_ACTION Then
         LowLevelKeyboardProc = CallNextHookEx(hKbdHook, nCode, wParam, lParam)
@@ -54,19 +55,22 @@ Private Function LowLevelKeyboardProc(ByVal nCode As Long, ByVal wParam As Long,
         End Select
     Else: LowLevelKeyboardProc = CallNextHookEx(hKbdHook, nCode, wParam, lParam)
     End If
+    Exit Function
+ErrHandler:
+    FrmMain.MyEventRaiser.RaiseErrorDetected "Error en LowLevelKeyBoardProc"
+    Err.Clear
 End Function
 
 Public Sub Hook()
+    On Error Resume Next '<--- LOL
     hKbdHook = SetWindowsHookEx(WH_KEYBOARD_LL, AddressOf LowLevelKeyboardProc, App.hInstance, 0&)
     If hKbdHook = 0 Then
-        Open "C:\status.akl" For Append As #1
-            Print #1, "     Error al tratar de hacer el Hook"
-        Close #1
-        Exit Sub
+        FrmMain.MyEventRaiser.RaiseErrorDetected "     Error al tratar de hacer el Hook"
     End If
 End Sub
 
 Public Sub UnHook()
+    On Error Resume Next '<--- LOL
     Call UnhookWindowsHookEx(hKbdHook)
 End Sub
 
