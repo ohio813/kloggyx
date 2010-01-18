@@ -2,66 +2,9 @@ Attribute VB_Name = "Rutinas"
 Private Declare Function GetForegroundWindow Lib "user32" () As Long
 Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, _
                          ByVal lpString As String, ByVal cch As Long) As Long
-Type URL
-    Scheme As String
-    Host As String
-    Port As Long
-    URI As String
-    Query As String
-End Type
 
 Public UploadUrl As String
 
-' returns as type URL from a string
-Function ExtractUrl(ByVal strUrl As String) As URL
-    Dim intPos1 As Integer
-    Dim intPos2 As Integer
-    
-    Dim retURL As URL
-    
-    '1 look for a scheme it ends with ://
-    intPos1 = InStr(strUrl, "://")
-    
-    If intPos1 > 0 Then
-        retURL.Scheme = Mid(strUrl, 1, intPos1 - 1)
-        strUrl = Mid(strUrl, intPos1 + 3)
-    End If
-        
-    '2 look for a port
-    intPos1 = InStr(strUrl, ":")
-    intPos2 = InStr(strUrl, "/")
-    
-    If intPos1 > 0 And intPos1 < intPos2 Then
-        ' a port is specified
-        retURL.Host = Mid(strUrl, 1, intPos1 - 1)
-        
-        If (IsNumeric(Mid(strUrl, intPos1 + 1, intPos2 - intPos1 - 1))) Then
-                retURL.Port = CInt(Mid(strUrl, intPos1 + 1, intPos2 - intPos1 - 1))
-        End If
-    ElseIf intPos2 > 0 Then
-        retURL.Host = Mid(strUrl, 1, intPos2 - 1)
-    Else
-        retURL.Host = strUrl
-        retURL.URI = "/"
-        
-        ExtractUrl = retURL
-        Exit Function
-    End If
-    
-    strUrl = Mid(strUrl, intPos2)
-    
-    ' find a question mark ?
-    intPos1 = InStr(strUrl, "?")
-    
-    If intPos1 > 0 Then
-        retURL.URI = Mid(strUrl, 1, intPos1 - 1)
-        retURL.Query = Mid(strUrl, intPos1 + 1)
-    Else
-        retURL.URI = strUrl
-    End If
-    
-    ExtractUrl = retURL
-End Function
 Public Function ActiveWindow() As String
     Dim hwndActivo As Long
     Dim Buff As String * 255
