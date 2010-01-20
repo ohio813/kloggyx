@@ -281,14 +281,14 @@ If Not m_lngSocketHandle = INVALID_SOCKET Then
     
     If lngResult = SOCKET_ERROR Then
         
-        m_enmState = sckError: Debug.Print "STATE: sckError"
+        m_enmState = sckError: 'Debug.Print "STATE: sckError"
         Dim lngErrorCode As Long
         lngErrorCode = Err.LastDllError
         Err.Raise lngErrorCode, "CSocketMaster.DestroySocket", GetErrorDescription(lngErrorCode)
     
     Else
         
-        Debug.Print "OK Destroyed socket " & m_lngSocketHandle
+        'Debug.Print "OK Destroyed socket " & m_lngSocketHandle
         modSocketMaster.UnregisterSocket m_lngSocketHandle
         m_lngSocketHandle = INVALID_SOCKET
     
@@ -300,7 +300,7 @@ End Sub
 Public Sub CloseSck()
 If m_lngSocketHandle = INVALID_SOCKET Then Exit Sub
 
-m_enmState = sckClosing: Debug.Print "STATE: sckClosing"
+m_enmState = sckClosing: 'Debug.Print "STATE: sckClosing"
 CleanResolutionSystem
 DestroySocket
      
@@ -311,7 +311,7 @@ m_strSendBuffer = ""
 m_lngSendBufferLen = 0
 m_lngRecvBufferLen = 0
 
-m_enmState = sckClosed: Debug.Print "STATE: sckClosed"
+m_enmState = sckClosed: 'Debug.Print "STATE: sckClosed"
 
 End Sub
 
@@ -335,8 +335,8 @@ If m_lngSocketHandle = INVALID_SOCKET Then
     
     If lngResult = INVALID_SOCKET Then
         
-        m_enmState = sckError: Debug.Print "STATE: sckError"
-        Debug.Print "ERROR trying to create socket"
+        m_enmState = sckError: 'Debug.Print "STATE: sckError"
+        'Debug.Print "ERROR trying to create socket"
         SocketExists = False
         lngErrorCode = Err.LastDllError
         Dim blnCancelDisplay As Boolean
@@ -345,7 +345,7 @@ If m_lngSocketHandle = INVALID_SOCKET Then
         If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.SocketExists"
     Else
         
-        Debug.Print "OK Created socket: " & lngResult
+        'Debug.Print "OK Created socket: " & lngResult
         m_lngSocketHandle = lngResult
         'set and get some socket options
         ProcessOptions
@@ -396,7 +396,7 @@ If Not BindInternal Then Exit Sub
 'If we are using UDP we just exit silently.
 'Remember UDP is a connectionless protocol.
 If m_enmProtocol = sckUDPProtocol Then
-    m_enmState = sckOpen: Debug.Print "STATE: sckOpen"
+    m_enmState = sckOpen: 'Debug.Print "STATE: sckOpen"
     Exit Sub
 End If
 
@@ -430,7 +430,7 @@ If m_enmState <> sckResolvingHost Then Exit Sub
 
 If lngErrorCode = 0 Then 'if there weren't errors trying to resolve the hostname
     
-    m_enmState = sckHostResolved: Debug.Print "STATE: sckHostResolved"
+    m_enmState = sckHostResolved: 'Debug.Print "STATE: sckHostResolved"
     
     Dim udtHostent As HOSTENT
     Dim lngPtrToIP As Long
@@ -479,7 +479,7 @@ Dim blnCancelDisplay As Boolean
 
 'handle any possible error
 If lngErrorCode <> 0 Then
-    m_enmState = sckError: Debug.Print "STATE: sckError"
+    m_enmState = sckError: 'Debug.Print "STATE: sckError"
     blnCancelDisplay = True
     RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.PostSocket", "", 0, blnCancelDisplay)
     If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.PostSocket"
@@ -499,10 +499,10 @@ Case FD_CONNECT
     'Arrival of this message means that the connection initiated by the call
     'of the connect Winsock API function was successfully established.
 
-    Debug.Print "FD_CONNECT " & m_lngSocketHandle
+    'Debug.Print "FD_CONNECT " & m_lngSocketHandle
     
     If m_enmState <> sckConnecting Then
-        Debug.Print "WARNING: Omitting FD_CONNECT"
+        'Debug.Print "WARNING: Omitting FD_CONNECT"
         Exit Sub
     End If
     
@@ -512,7 +512,7 @@ Case FD_CONNECT
     'Get the connection local end-point parameters
     GetRemoteInfo m_lngSocketHandle, m_lngRemotePort, m_strRemoteHostIP, m_strRemoteHost
     
-    m_enmState = sckConnected: Debug.Print "STATE: sckConnected"
+    m_enmState = sckConnected: 'Debug.Print "STATE: sckConnected"
     RaiseEvent Connect
 
 '======================================================================
@@ -524,10 +524,10 @@ Case FD_WRITE
     'service is empty and ready to receive data to send through
     'the network.
     
-    Debug.Print "FD_WRITE " & m_lngSocketHandle
+    'Debug.Print "FD_WRITE " & m_lngSocketHandle
     
     If m_enmState <> sckConnected Then
-        Debug.Print "WARNING: Omitting FD_WRITE"
+        'Debug.Print "WARNING: Omitting FD_WRITE"
         Exit Sub
     End If
     
@@ -541,12 +541,12 @@ Case FD_READ
 
     'Some data has arrived for this socket.
 
-    Debug.Print "FD_READ " & m_lngSocketHandle
+    'Debug.Print "FD_READ " & m_lngSocketHandle
     
     If m_enmProtocol = sckTCPProtocol Then
         
         If m_enmState <> sckConnected Then
-            Debug.Print "WARNING: Omitting FD_READ"
+            'Debug.Print "WARNING: Omitting FD_READ"
             Exit Sub
         End If
         
@@ -563,7 +563,7 @@ Case FD_READ
     Else 'UDP protocol
         
         If m_enmState <> sckOpen Then
-            Debug.Print "WARNING: Omitting FD_READ"
+            'Debug.Print "WARNING: Omitting FD_READ"
             Exit Sub
         End If
         
@@ -593,9 +593,9 @@ Case FD_ACCEPT
     'Winsock API function in oreder to create a new socket for the
     'requested connection.
   
-    Debug.Print "FD_ACCEPT " & m_lngSocketHandle
+    'Debug.Print "FD_ACCEPT " & m_lngSocketHandle
     If m_enmState <> sckListening Then
-        Debug.Print "WARNING: Omitting FD_ACCEPT"
+        'Debug.Print "WARNING: Omitting FD_ACCEPT"
         Exit Sub
     End If
     
@@ -603,7 +603,7 @@ Case FD_ACCEPT
     
     If lngResult = INVALID_SOCKET Then
         lngErrorCode = Err.LastDllError
-        m_enmState = sckError: Debug.Print "STATE: sckError"
+        m_enmState = sckError: 'Debug.Print "STATE: sckError"
         blnCancelDisplay = True
         RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.PostSocket", "", 0, blnCancelDisplay)
         If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.PostSocket"
@@ -626,7 +626,7 @@ Case FD_ACCEPT
         
         GetRemoteInfo lngResult, m_lngRemotePort, m_strRemoteHostIP, m_strRemoteHost
         
-        Debug.Print "OK Accepted socket: " & lngResult
+        'Debug.Print "OK Accepted socket: " & lngResult
         RaiseEvent ConnectionRequest(lngResult)
         
         'we return original info
@@ -642,7 +642,7 @@ Case FD_ACCEPT
             api_closesocket lngResult
             modSocketMaster.UnregisterSocket lngResult
             modSocketMaster.UnregisterAccept lngResult
-            Debug.Print "OK Closed accepted socket: " & lngResult
+            'Debug.Print "OK Closed accepted socket: " & lngResult
         End If
     End If
     
@@ -652,14 +652,14 @@ Case FD_CLOSE
     
     'This message means that the remote host is closing the conection
     
-    Debug.Print "FD_CLOSE " & m_lngSocketHandle
+    'Debug.Print "FD_CLOSE " & m_lngSocketHandle
     
     If m_enmState <> sckConnected Then
-        Debug.Print "WARNING: Omitting FD_CLOSE"
+        'Debug.Print "WARNING: Omitting FD_CLOSE"
         Exit Sub
     End If
     
-    m_enmState = sckClosing: Debug.Print "STATE: sckClosing"
+    m_enmState = sckClosing: 'Debug.Print "STATE: sckClosing"
     RaiseEvent CloseSck
     
 End Select
@@ -672,15 +672,15 @@ Dim blnCancelDisplay As Boolean
 
 'Check and handle errors
 If lngErrorCode <> 0 Then
-    m_enmState = sckError: Debug.Print "STATE: sckError"
+    m_enmState = sckError: 'Debug.Print "STATE: sckError"
     blnCancelDisplay = True
     RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.ConnectToIP", "", 0, blnCancelDisplay)
     If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.ConnectToIP"
     Exit Sub
 End If
 
-Debug.Print "OK Connecting to: " + m_strRemoteHost + " " + m_strRemoteHostIP
-m_enmState = sckConnecting: Debug.Print "STATE: sckConnecting"
+'Debug.Print "OK Connecting to: " + m_strRemoteHost + " " + m_strRemoteHostIP
+m_enmState = sckConnecting: 'Debug.Print "STATE: sckConnecting"
 
 Dim udtSockAddr As sockaddr_in
 Dim lngResult As Long
@@ -703,7 +703,7 @@ If lngResult = SOCKET_ERROR Then
         If lngErrorCode = WSAEADDRNOTAVAIL Then
             Err.Raise WSAEADDRNOTAVAIL, "CSocketMaster.ConnectToIP", GetErrorDescription(WSAEADDRNOTAVAIL)
         Else
-            m_enmState = sckError: Debug.Print "STATE: sckError"
+            m_enmState = sckError: 'Debug.Print "STATE: sckError"
             blnCancelDisplay = True
             RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.ConnectToIP", "", 0, blnCancelDisplay)
             If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.ConnectToIP"
@@ -719,7 +719,7 @@ If m_enmState <> sckClosed Then
 End If
 
 If BindInternal(LocalPort, LocalIP) Then
-    m_enmState = sckOpen: Debug.Print "STATE: sckOpen"
+    m_enmState = sckOpen: 'Debug.Print "STATE: sckOpen"
 End If
 End Sub
 
@@ -801,7 +801,7 @@ Else
 
     If lngLocalPortInternal <> 0 Then
     
-        Debug.Print "OK Bind HOST: " & strLocalHostInternal & " PORT: " & lngLocalPortInternal
+        'Debug.Print "OK Bind HOST: " & strLocalHostInternal & " PORT: " & lngLocalPortInternal
         m_lngLocalPort = lngLocalPortInternal
         
     Else
@@ -811,7 +811,7 @@ Else
             lngErrorCode = Err.LastDllError
             Err.Raise lngErrorCode, "CSocketMaster.BindInternal", GetErrorDescription(lngErrorCode)
         Else
-            Debug.Print "OK Bind HOST: " & strLocalHostInternal & " PORT: " & lngResult
+            'Debug.Print "OK Bind HOST: " & strLocalHostInternal & " PORT: " & lngResult
             m_lngLocalPortBind = lngResult
         End If
         
@@ -849,7 +849,7 @@ If m_lngMemoryHandle <> 0 Then
     m_lngMemoryPointer = 0
     api_GlobalFree m_lngMemoryHandle
     m_lngMemoryHandle = 0
-    Debug.Print "OK Freed resolution memory"
+    'Debug.Print "OK Freed resolution memory"
 End If
 End Sub
 
@@ -913,7 +913,7 @@ lngAddress = api_inet_addr(Host)
 If lngAddress = INADDR_NONE Then 'if Host isn't an IP
     
     ResolveIfHostname = vbNull
-    m_enmState = sckResolvingHost: Debug.Print "STATE: sckResolvingHost"
+    m_enmState = sckResolvingHost: 'Debug.Print "STATE: sckResolvingHost"
     
     If AllocateMemory Then
         
@@ -922,7 +922,7 @@ If lngAddress = INADDR_NONE Then 'if Host isn't an IP
         
         If lngAsynHandle = 0 Then
             FreeMemory
-            m_enmState = sckError: Debug.Print "STATE: sckError"
+            m_enmState = sckError: 'Debug.Print "STATE: sckError"
             Dim lngErrorCode As Long
             lngErrorCode = Err.LastDllError
             Dim blnCancelDisplay As Boolean
@@ -931,13 +931,13 @@ If lngAddress = INADDR_NONE Then 'if Host isn't an IP
             If blnCancelDisplay = False Then MsgBox GetErrorDescription(lngErrorCode), vbOKOnly, "CSocketMaster.ResolveIfHostname"
         Else
             m_colWaitingResolutions.Add lngAsynHandle, "R" & lngAsynHandle
-            Debug.Print "Resolving host " & Host; " with handle " & lngAsynHandle
+            'Debug.Print "Resolving host " & Host; " with handle " & lngAsynHandle
         End If
         
     Else
         
-        m_enmState = sckError: Debug.Print "STATE: sckError"
-        Debug.Print "Error trying to allocate memory"
+        m_enmState = sckError: 'Debug.Print "STATE: sckError"
+        'Debug.Print "Error trying to allocate memory"
         Err.Raise sckOutOfMemory, "CSocketMaster.ResolveIfHostname", "Out of memory"
         
     End If
@@ -1011,18 +1011,17 @@ End If
 End Function
 
 Public Sub SendData(Data As Variant)
-
 Dim arrData() As Byte 'We store the data here before send it
 
 If m_enmProtocol = sckTCPProtocol Then
     If m_enmState <> sckConnected Then
-        Err.Raise sckBadState, "CSocketMaster.SendData", "Wrong protocol or connection state for the requested transaction or request"
+        'Err.Raise sckBadState, "CSocketMaster.SendData", "Wrong protocol or connection state for the requested transaction or request"
         Exit Sub
     End If
 Else 'If we use UDP we create a socket if there isn't one yet
     If Not SocketExists Then Exit Sub
     If Not BindInternal Then Exit Sub
-    m_enmState = sckOpen: Debug.Print "STATE: sckOpen"
+    m_enmState = sckOpen: 'Debug.Print "STATE: sckOpen"
 End If
 
 'We need to convert data variant into a byte array
@@ -1146,7 +1145,7 @@ lngResult = api_sendto(m_lngSocketHandle, arrData(0), lngBufferLength, 0&, udtSo
     
 If lngResult = SOCKET_ERROR Then
     lngErrorCode = Err.LastDllError
-    m_enmState = sckError: Debug.Print "STATE: sckError"
+    m_enmState = sckError: 'Debug.Print "STATE: sckError"
     Dim blnCancelDisplay As Boolean
     blnCancelDisplay = True
     RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.SendBufferedDataUDP", "", 0, blnCancelDisplay)
@@ -1181,10 +1180,10 @@ Do Until lngResult = SOCKET_ERROR Or Len(m_strSendBuffer) = 0
         lngErrorCode = Err.LastDllError
     
         If lngErrorCode = WSAEWOULDBLOCK Then
-            Debug.Print "WARNING: Send buffer full, waiting..."
+            'Debug.Print "WARNING: Send buffer full, waiting..."
             If lngTotalSent > 0 Then RaiseEvent SendProgress(lngTotalSent, Len(m_strSendBuffer))
         Else
-            m_enmState = sckError: Debug.Print "STATE: sckError"
+            m_enmState = sckError: 'Debug.Print "STATE: sckError"
             Dim blnCancelDisplay As Boolean
             blnCancelDisplay = True
             RaiseEvent Error(lngErrorCode, GetErrorDescription(lngErrorCode), 0, "CSocketMaster.SendBufferedData", "", 0, blnCancelDisplay)
@@ -1192,12 +1191,12 @@ Do Until lngResult = SOCKET_ERROR Or Len(m_strSendBuffer) = 0
         End If
 
     Else
-        Debug.Print "OK Bytes sent: " & lngResult
+        'Debug.Print "OK Bytes sent: " & lngResult
         lngTotalSent = lngTotalSent + lngResult
         If Len(m_strSendBuffer) > lngResult Then
             m_strSendBuffer = Mid$(m_strSendBuffer, lngResult + 1)
         Else
-            Debug.Print "OK Finished SENDING"
+            'Debug.Print "OK Finished SENDING"
             m_strSendBuffer = ""
             Dim lngTemp As Long
             lngTemp = lngTotalSent
@@ -1225,7 +1224,7 @@ lngBytesReceived = api_recv(m_lngSocketHandle, arrBuffer(0), m_lngRecvBufferLen,
 
 If lngBytesReceived = SOCKET_ERROR Then
     
-    m_enmState = sckError: Debug.Print "STATE: sckError"
+    m_enmState = sckError: 'Debug.Print "STATE: sckError"
     Dim lngErrorCode As Long
     lngErrorCode = Err.LastDllError
     Err.Raise lngErrorCode, "CSocketMaster.RecvDataToBuffer", GetErrorDescription(lngErrorCode)
@@ -1282,7 +1281,7 @@ Else
 End If
 
 
-Debug.Print "Winsock buffer size for sends: " & m_lngRecvBufferLen
+'Debug.Print "Winsock buffer size for sends: " & m_lngRecvBufferLen
 Debug.Print "Winsock buffer size for receives: " & m_lngSendBufferLen
 End Sub
 

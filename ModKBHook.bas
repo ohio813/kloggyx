@@ -66,11 +66,14 @@ Public Sub Hook()
     hKbdHook = SetWindowsHookEx(WH_KEYBOARD_LL, AddressOf LowLevelKeyboardProc, App.hInstance, 0&)
     If hKbdHook = 0 Then
         FrmMain.MyEventRaiser.RaiseErrorDetected "     Error al tratar de hacer el Hook"
+        Exit Sub
     End If
+    Debug.Print "Hooked"
 End Sub
 
 Public Sub UnHook()
     On Error Resume Next '<--- LOL
     Call UnhookWindowsHookEx(hKbdHook)
+    Debug.Print "UnHooked"
 End Sub
 

