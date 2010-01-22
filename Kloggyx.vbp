@@ -9,6 +9,7 @@ Class=CSocketMaster; CSocketMaster.cls
 Module=Rutinas; Rutinas.bas
 IconForm="FrmMain"
 Startup="FrmMain"
+ExeName32="Kloggyx.exe"
 Command32=""
 Name="Kbhook"
 HelpContextID="0"
