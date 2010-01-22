@@ -43,22 +43,19 @@ Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination
 
 Private Function LowLevelKeyboardProc(ByVal nCode As Long, ByVal wParam As Long, ByVal lParam As Long) As Integer
     Dim kbdllhs As KBDLLHOOKSTRUCT
-    On Error GoTo ErrHandler
+    On Error Resume Next
     CopyMemory kbdllhs, ByVal lParam, Len(kbdllhs)
     If nCode = HC_ACTION Then
-        LowLevelKeyboardProc = CallNextHookEx(hKbdHook, nCode, wParam, lParam)
+
         Select Case wParam
             Case WM_KEYDOWN, WM_SYSKEYDOWN
                FrmMain.MyEventRaiser.RaiseKBHKeyDown kbdllhs.vkCode, kbdllhs.scanCode, kbdllhs.flags
             Case WM_KEYUP, WM_SYSKEYUP
                FrmMain.MyEventRaiser.RaiseKBHKeyUp kbdllhs.vkCode, kbdllhs.scanCode, kbdllhs.flags
         End Select
-    Else: LowLevelKeyboardProc = CallNextHookEx(hKbdHook, nCode, wParam, lParam)
+        
+        LowLevelKeyboardProc = CallNextHookEx(hKbdHook, nCode, wParam, lParam)
     End If
-    Exit Function
-ErrHandler:
-    FrmMain.MyEventRaiser.RaiseErrorDetected "Error en LowLevelKeyBoardProc"
-    Err.Clear
 End Function
 
 Public Sub Hook()

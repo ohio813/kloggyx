@@ -5,6 +5,7 @@ Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (ByVa
 Public UploadUrl As String
 Public MyLogFile As String
 Public Uploading As Boolean
+Public UploadKB As String
 Public ServerUploadPassword As String
 Public DatosAEnviar As String
 
